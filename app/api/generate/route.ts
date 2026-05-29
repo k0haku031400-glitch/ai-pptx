@@ -1,25 +1,37 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import type { PresentationConfig, SlideContent } from "@/lib/types";
+import type { PresentationSettings, SlideContent } from "@/lib/types";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-function slideCountGuide(duration: number): string {
-  if (duration <= 5) return "5〜7枚（タイトル・まとめ含む）";
-  if (duration <= 10) return "8〜12枚（タイトル・まとめ含む）";
-  return "15〜20枚（タイトル・まとめ含む）";
+const SYSTEM_PROMPT = `あなたはプレゼンテーション資料の専門家です。
+ユーザーが各スライドに入力した『目的』と『説明したい内容』をもとに、
+プロフェッショナルなスライドのタイトルと箇条書きを日本語で生成してください。
+
+出力はJSON配列のみ。説明・コードフェンス不要。
+各要素の形式:
+{
+  "id": "元のSlideInputのid",
+  "type": "title" | "content" | "conclusion",
+  "title": "スライドタイトル",
+  "bulletPoints": ["ポイント1", "ポイント2", "ポイント3"],
+  "notes": "発表者ノート（任意）"
 }
 
-function parseSlidesFromText(text: string): SlideContent[] {
-  let jsonText = text.trim();
-  const fenceMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenceMatch) {
-    jsonText = fenceMatch[1].trim();
-  }
+ルール:
+- タイトルは簡潔に15文字以内
+- bulletPointsは3〜5個
+- bulletPointsは必ず4〜5個生成すること
+- 各ポイントは体言止めではなく、具体的な数字や固有名詞を含めること
+- 最初のスライドはtype: title、最後はtype: conclusion
+- ユーザーの意図を尊重し、内容を膨らませて具体的に書く
+- スライドの順番はユーザーの入力順を必ず守ること。並び替えしない。`;
 
-  const parsed = JSON.parse(jsonText) as unknown;
+function parseSlidesFromText(text: string): SlideContent[] {
+  const raw = text.replace(/```json|```/g, "").trim();
+  const parsed = JSON.parse(raw) as unknown;
 
   if (Array.isArray(parsed)) {
     return parsed as SlideContent[];
@@ -36,9 +48,29 @@ function parseSlidesFromText(text: string): SlideContent[] {
   throw new Error("Invalid slides JSON structure");
 }
 
+function buildUserMessage(settings: PresentationSettings): string {
+  const slideLines = settings.slides
+    .map(
+      (s, i) =>
+        `${i + 1}. 目的: ${s.purpose || "（未入力）"}\n   説明したい内容: ${s.content || "（未入力）"}`
+    )
+    .join("\n");
+
+  return `プレゼンタイトル: ${settings.title}
+スライド一覧:
+${slideLines}`;
+}
+
 export async function POST(request: Request) {
   try {
-    const config = (await request.json()) as PresentationConfig;
+    const settings = (await request.json()) as PresentationSettings;
+
+    if (!settings.title?.trim() || !settings.slides?.length) {
+      return NextResponse.json(
+        { error: "title and slides are required" },
+        { status: 400 }
+      );
+    }
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
@@ -49,33 +81,12 @@ export async function POST(request: Request) {
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
-      system: `あなたはプレゼン資料の構成の専門家です。設定に基づいて最適なスライド構成をJSON配列で生成してください。
-
-各スライドは以下の SlideContent 型に従ってください:
-- id: string（一意のID、例: "slide-1"）
-- type: "title" | "content" | "conclusion"
-- title: string
-- bulletPoints: string[]（最大5件）
-- notes?: string（任意）
-
-構成ルール:
-- タイトルスライド1枚（type: "title"）
-- 内容スライド（type: "content"）— 所要時間に応じた枚数
-- まとめスライド1枚（type: "conclusion"）
-- 日本語で生成する
-- JSONのみ出力し、説明文は不要
-
-所要時間に応じたスライド総数の目安:
-- 5分 → 5〜7枚
-- 10分 → 8〜12枚
-- 30分 → 15〜20枚`,
+      max_tokens: 2000,
+      system: SYSTEM_PROMPT,
       messages: [
         {
           role: "user",
-          content: `以下の設定でスライド構成を生成してください。スライド総数の目安: ${slideCountGuide(config.duration)}
-
-${JSON.stringify(config, null, 2)}`,
+          content: buildUserMessage(settings),
         },
       ],
     });
@@ -89,7 +100,10 @@ ${JSON.stringify(config, null, 2)}`,
     }
 
     const slides = parseSlidesFromText(textBlock.text);
-    return NextResponse.json({ slides });
+    return NextResponse.json({
+      slides,
+      brandColor: settings.brandColor,
+    });
   } catch (error) {
     console.error("Generate API error:", error);
     return NextResponse.json(

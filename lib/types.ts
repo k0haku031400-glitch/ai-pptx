@@ -27,3 +27,17 @@ export interface SlideContent {
   bulletPoints: string[];
   notes?: string;
 }
+
+/** ユーザーが1枚ずつ入力するスライドの「素材」 */
+export interface SlideInput {
+  id: string;
+  purpose: string;
+  content: string;
+}
+
+/** アプリ全体の設定 */
+export interface PresentationSettings {
+  title: string;
+  brandColor: string;
+  slides: SlideInput[];
+}

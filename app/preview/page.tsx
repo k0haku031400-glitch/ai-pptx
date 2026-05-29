@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import type { SlideContent } from "@/lib/types";
+import type { SlideContent, SlideInput } from "@/lib/types";
 
 function EditableText({
   value,
@@ -93,29 +93,55 @@ const TYPE_LABELS: Record<string, string> = {
 
 export default function PreviewPage() {
   const [slides, setSlides] = useState<SlideContent[]>([]);
+  const [slideInputs, setSlideInputs] = useState<SlideInput[]>([]);
   const [brandColor, setBrandColor] = useState("#0066CC");
   const [ready, setReady] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    const rawSlides = sessionStorage.getItem("pptx-ai-slides");
-    const rawColor = sessionStorage.getItem("pptx-ai-brandColor");
-    if (rawSlides) {
+    const rawResult = sessionStorage.getItem("pptx_result");
+    const rawInputs = sessionStorage.getItem("pptx_inputs");
+
+    if (rawResult) {
       try {
-        setSlides(JSON.parse(rawSlides) as SlideContent[]);
+        const result = JSON.parse(rawResult) as {
+          slides: SlideContent[];
+          brandColor: string;
+        };
+        setSlides(result.slides ?? []);
+        if (result.brandColor) setBrandColor(result.brandColor);
       } catch {
         setSlides([]);
       }
     }
-    if (rawColor) setBrandColor(rawColor);
+
+    if (rawInputs) {
+      try {
+        setSlideInputs(JSON.parse(rawInputs) as SlideInput[]);
+      } catch {
+        setSlideInputs([]);
+      }
+    }
+
     setReady(true);
   }, []);
+
+  const purposeBySlideId = new Map(
+    slideInputs.map((input) => [input.id, input.purpose])
+  );
+
+  const persistResult = (nextSlides: SlideContent[], color = brandColor) => {
+    sessionStorage.setItem(
+      "pptx_result",
+      JSON.stringify({ slides: nextSlides, brandColor: color })
+    );
+  };
 
   const updateSlide = (index: number, patch: Partial<SlideContent>) => {
     setSlides((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], ...patch };
-      sessionStorage.setItem("pptx-ai-slides", JSON.stringify(next));
+      persistResult(next);
       return next;
     });
   };
@@ -126,7 +152,7 @@ export default function PreviewPage() {
       const bullets = [...next[slideIndex].bulletPoints];
       bullets[bulletIndex] = value;
       next[slideIndex] = { ...next[slideIndex], bulletPoints: bullets };
-      sessionStorage.setItem("pptx-ai-slides", JSON.stringify(next));
+      persistResult(next);
       return next;
     });
   };
@@ -211,6 +237,12 @@ export default function PreviewPage() {
                   {i + 1} / {slides.length}
                 </span>
               </div>
+
+              {purposeBySlideId.get(slide.id) && (
+                <p className="mb-2 text-xs text-gray-400">
+                  目的: {purposeBySlideId.get(slide.id)}
+                </p>
+              )}
 
               <EditableText
                 value={slide.title}
