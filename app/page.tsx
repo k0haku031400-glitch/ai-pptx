@@ -115,7 +115,7 @@ export default function Home() {
         <h1 className="mb-2 text-2xl font-bold text-gray-900">
           PowerPoint AI 生成
         </h1>
-        <p className="mb-8 text-sm text-gray-500">
+        <p className="mb-8 text-base text-gray-600">
           スライドごとに目的と内容を入力し、AIがタイトルと箇条書きを生成します
         </p>
 
@@ -123,7 +123,7 @@ export default function Home() {
           <div>
             <label
               htmlFor="presentation-title"
-              className="mb-2 block text-sm font-medium text-gray-700"
+              className="mb-2 block text-base font-semibold text-gray-800"
             >
               プレゼン全体タイトル
             </label>
@@ -135,13 +135,13 @@ export default function Home() {
                 setSettings((prev) => ({ ...prev, title: e.target.value }))
               }
               placeholder="例: 新サービス提案書"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
             />
           </div>
           <div>
             <label
               htmlFor="brand-color"
-              className="mb-2 block text-sm font-medium text-gray-700"
+              className="mb-2 block text-base font-semibold text-gray-800"
             >
               ブランドカラー
             </label>
@@ -158,7 +158,7 @@ export default function Home() {
                 }
                 className="h-10 w-14 cursor-pointer rounded border border-gray-300"
               />
-              <span className="font-mono text-sm text-gray-600">
+              <span className="font-mono text-base text-gray-700">
                 {settings.brandColor}
               </span>
             </div>
@@ -189,14 +189,14 @@ export default function Home() {
                   >
                     {index + 1}
                   </span>
-                  <span className="text-sm font-medium text-gray-500">
+                  <span className="text-base font-semibold text-gray-700">
                     スライド {index + 1}
                   </span>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1.5 block text-base font-semibold text-gray-800">
                       目的
                     </label>
                     <textarea
@@ -209,11 +209,11 @@ export default function Home() {
                         "例: このスライドで伝えたいことを一言で"
                       }
                       rows={2}
-                      className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base leading-relaxed text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1.5 block text-base font-semibold text-gray-800">
                       説明したい内容
                     </label>
                     <textarea
@@ -226,7 +226,7 @@ export default function Home() {
                         "例: 伝えたい事実・データ・ストーリーをメモ書きで"
                       }
                       rows={4}
-                      className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base leading-relaxed text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                     />
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export default function Home() {
           <button
             type="button"
             onClick={addSlide}
-            className="mb-8 w-full rounded-xl border-2 border-dashed border-gray-300 py-3 text-sm font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600"
+            className="mb-8 w-full rounded-xl border-2 border-dashed border-gray-300 py-3 text-base font-medium text-gray-700 hover:border-blue-400 hover:text-blue-700"
           >
             ＋ スライドを追加
           </button>
@@ -255,7 +255,7 @@ export default function Home() {
             type="button"
             onClick={handleGenerate}
             disabled={!canGenerate || loading}
-            className="w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg bg-blue-600 py-3.5 text-base font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "生成中..." : "AIでスライドを生成する"}
           </button>

@@ -39,7 +39,7 @@ function EditableText({
               setEditing(false);
             }
           }}
-          className={`w-full resize-none rounded border border-blue-400 bg-white px-2 py-1 focus:outline-none ${className}`}
+          className={`w-full resize-none rounded border border-blue-400 bg-white px-2 py-1 text-base text-gray-900 focus:outline-none ${className}`}
           rows={3}
         />
       );
@@ -64,7 +64,7 @@ function EditableText({
             setEditing(false);
           }
         }}
-        className={`w-full rounded border border-blue-400 bg-white px-2 py-1 focus:outline-none ${className}`}
+        className={`w-full rounded border border-blue-400 bg-white px-2 py-1 text-base text-gray-900 focus:outline-none ${className}`}
       />
     );
   }
@@ -77,10 +77,12 @@ function EditableText({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") setEditing(true);
       }}
-      className={`cursor-text rounded px-1 hover:bg-blue-50 ${className}`}
+      className={`cursor-text rounded px-1 text-gray-900 hover:bg-blue-50 ${className}`}
       title="クリックして編集"
     >
-      {value || "（クリックして入力）"}
+      {value || (
+        <span className="text-gray-500">（クリックして入力）</span>
+      )}
     </span>
   );
 }
@@ -182,7 +184,7 @@ export default function PreviewPage() {
 
   if (!ready) {
     return (
-      <div className="flex min-h-full items-center justify-center text-gray-500">
+      <div className="flex min-h-full items-center justify-center text-base text-gray-600">
         読み込み中…
       </div>
     );
@@ -191,8 +193,8 @@ export default function PreviewPage() {
   if (slides.length === 0) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="mb-4 text-gray-600">スライドデータがありません。</p>
-        <Link href="/" className="text-blue-600 hover:underline">
+        <p className="mb-4 text-base text-gray-800">スライドデータがありません。</p>
+        <Link href="/" className="text-base font-medium text-blue-700 hover:underline">
           ← 最初からやり直す
         </Link>
       </div>
@@ -209,7 +211,7 @@ export default function PreviewPage() {
               type="button"
               onClick={handleDownload}
               disabled={downloading}
-              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-blue-600 px-5 py-2.5 text-base font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {downloading ? "ダウンロード中…" : ".pptxをダウンロード"}
             </button>
@@ -218,7 +220,7 @@ export default function PreviewPage() {
 
         <Link
           href="/"
-          className="mb-6 inline-block text-sm text-gray-500 hover:text-blue-600"
+          className="mb-6 inline-block text-base text-gray-600 hover:text-blue-700"
         >
           ← 最初からやり直す
         </Link>
@@ -230,35 +232,38 @@ export default function PreviewPage() {
               className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
             >
               <div className="mb-4 flex items-center justify-between">
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
                   {TYPE_LABELS[slide.type] ?? slide.type}
                 </span>
-                <span className="text-sm font-mono text-gray-400">
+                <span className="text-sm font-mono text-gray-600">
                   {i + 1} / {slides.length}
                 </span>
               </div>
 
               {purposeBySlideId.get(slide.id) && (
-                <p className="mb-2 text-xs text-gray-400">
-                  目的: {purposeBySlideId.get(slide.id)}
+                <p className="mb-3 text-sm leading-relaxed text-gray-600">
+                  <span className="font-medium text-gray-700">目的:</span>{" "}
+                  {purposeBySlideId.get(slide.id)}
                 </p>
               )}
 
               <EditableText
                 value={slide.title}
                 onChange={(title) => updateSlide(i, { title })}
-                className="mb-4 block text-xl font-bold text-gray-900"
+                className="mb-4 block text-2xl font-bold text-gray-900"
               />
 
               {slide.bulletPoints.length > 0 && (
-                <ul className="space-y-2 text-gray-700">
+                <ul className="space-y-3 text-gray-900">
                   {slide.bulletPoints.map((bp, j) => (
-                    <li key={j} className="flex gap-2">
-                      <span className="mt-0.5 shrink-0 text-gray-400">•</span>
+                    <li key={j} className="flex gap-3">
+                      <span className="mt-1 shrink-0 text-lg font-bold text-gray-500">
+                        •
+                      </span>
                       <EditableText
                         value={bp}
                         onChange={(v) => updateBullet(i, j, v)}
-                        className="flex-1 text-sm"
+                        className="flex-1 text-base leading-relaxed"
                         multiline
                       />
                     </li>
