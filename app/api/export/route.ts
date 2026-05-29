@@ -1,33 +1,49 @@
-export const runtime = "nodejs";
-
 import { NextResponse } from "next/server";
-import { generatePptx } from "@/lib/pptx";
 import type { SlideContent } from "@/lib/types";
+
+function slidesToMarkdown(slides: SlideContent[], title: string): string {
+  const parts: string[] = [`# ${title}`, "", "---", ""];
+
+  for (const slide of slides) {
+    parts.push(`## ${slide.title}`, "");
+
+    for (const point of slide.bulletPoints) {
+      parts.push(`- ${point}`);
+    }
+
+    if (slide.notes?.trim()) {
+      parts.push("", `> ${slide.notes.trim()}`);
+    }
+
+    parts.push("", "---", "");
+  }
+
+  return parts.join("\n").trimEnd();
+}
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       slides: SlideContent[];
-      brandColor: string;
+      title: string;
     };
 
-    const { slides, brandColor } = body;
+    const { slides, title } = body;
 
-    if (!slides?.length || !brandColor) {
+    if (!slides?.length || !title?.trim()) {
       return NextResponse.json(
-        { error: "slides and brandColor are required" },
+        { error: "slides and title are required" },
         { status: 400 }
       );
     }
 
-    const buffer = await generatePptx(slides, brandColor);
+    const markdown = slidesToMarkdown(slides, title.trim());
 
-    return new NextResponse(new Uint8Array(buffer), {
+    return new NextResponse(markdown, {
       status: 200,
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "Content-Disposition": 'attachment; filename="presentation.pptx"',
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="presentation.md"',
       },
     });
   } catch (error) {

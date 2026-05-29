@@ -98,8 +98,13 @@ export default function Home() {
 
       sessionStorage.setItem(
         "pptx_result",
-        JSON.stringify({ slides: data.slides, brandColor: data.brandColor })
+        JSON.stringify({
+          slides: data.slides,
+          brandColor: data.brandColor,
+          title: settings.title,
+        })
       );
+      sessionStorage.setItem("pptx_title", settings.title);
       sessionStorage.setItem("pptx_inputs", JSON.stringify(settings.slides));
       router.push("/preview");
     } catch (e) {

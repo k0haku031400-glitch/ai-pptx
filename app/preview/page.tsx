@@ -97,6 +97,7 @@ export default function PreviewPage() {
   const [slides, setSlides] = useState<SlideContent[]>([]);
   const [slideInputs, setSlideInputs] = useState<SlideInput[]>([]);
   const [brandColor, setBrandColor] = useState("#0066CC");
+  const [presentationTitle, setPresentationTitle] = useState("プレゼンテーション");
   const [ready, setReady] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -109,9 +110,11 @@ export default function PreviewPage() {
         const result = JSON.parse(rawResult) as {
           slides: SlideContent[];
           brandColor: string;
+          title?: string;
         };
         setSlides(result.slides ?? []);
         if (result.brandColor) setBrandColor(result.brandColor);
+        if (result.title?.trim()) setPresentationTitle(result.title.trim());
       } catch {
         setSlides([]);
       }
@@ -125,6 +128,11 @@ export default function PreviewPage() {
       }
     }
 
+    const storedTitle = sessionStorage.getItem("pptx_title");
+    if (storedTitle?.trim()) {
+      setPresentationTitle(storedTitle.trim());
+    }
+
     setReady(true);
   }, []);
 
@@ -135,7 +143,11 @@ export default function PreviewPage() {
   const persistResult = (nextSlides: SlideContent[], color = brandColor) => {
     sessionStorage.setItem(
       "pptx_result",
-      JSON.stringify({ slides: nextSlides, brandColor: color })
+      JSON.stringify({
+        slides: nextSlides,
+        brandColor: color,
+        title: presentationTitle,
+      })
     );
   };
 
@@ -165,14 +177,14 @@ export default function PreviewPage() {
       const res = await fetch("/api/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slides, brandColor }),
+        body: JSON.stringify({ slides, title: presentationTitle }),
       });
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "presentation.pptx";
+      a.download = "presentation.md";
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -213,7 +225,7 @@ export default function PreviewPage() {
               disabled={downloading}
               className="rounded-lg bg-blue-600 px-5 py-2.5 text-base font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {downloading ? "ダウンロード中…" : ".pptxをダウンロード"}
+              {downloading ? "ダウンロード中…" : "Markdownをダウンロード"}
             </button>
           </div>
         </div>
